@@ -75,14 +75,14 @@ vector<fastjet::PseudoJet> sorted_by_mass(const vector<fastjet::PseudoJet> & jet
 
 int main(int argc, char *argv[]) {
 
-  int id = (argc > 1) ? atoi(argv[1]) : 6; // 6=top quark, 23=Z, 25=higgs
+  const int id = (argc > 1) ? atoi(argv[1]) : 6; // 6=top quark, 23=Z, 25=higgs
   
-  double pT = (argc > 2) ? atof(argv[2]) : 350.;
+  const double pT = (argc > 2) ? atof(argv[2]) : 350.;
   
   const double eta = 1.0; 
   const double phi =  0.0;
 
-  const int nEvent = 10000;
+  const int nEvent = (argc > 3) ? atoi(argv[3]) : 10000;
   const int nList = 3;
 
   // Generator; shorthand for event and particleData.
