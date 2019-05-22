@@ -72,6 +72,9 @@ int main() {
   pythia.readString("Next:numberShowEvent = 0");
 
   // top/Z/H hadronic decays only
+  pythia.readString("6:onMode = off");
+  pythia.readString("6:onIfMatch = 5 -24 ");
+  
   pythia.readString("24:onMode = off");
   pythia.readString("24:onIfAny = 1 2 3 4 -1 -2 -3 -4");
 
@@ -148,5 +151,7 @@ int main() {
   
   pythia.stat();
 
+  delete jetDef;
+  
   return 0;
 }
