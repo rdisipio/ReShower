@@ -3,9 +3,14 @@
 // https://github.com/mortenpi/pythia8/blob/master/examples/main21.cc
 
 #include "Pythia8/Pythia.h"
-#include "Pythia8Plugins/FastJet3.h"
+//#include "Pythia8Plugins/FastJet3.h"
+
+#include "fastjet/PseudoJet.hh"
+#include "fastjet/ClusterSequence.hh"
+#include "fastjet/contrib/Nsubjettiness.hh"
 
 using namespace Pythia8; 
+using namespace fastjet::contrib;
 
 //==========================================================================
 
@@ -24,9 +29,9 @@ void fillParticle(int id, double pT, double eta, double phi,
   double P = sqrtpos( px*px + py*py + pz*pz );
   double E = sqrtpos( P*P + m*m );
 
-  int status = 23; // outgoing parton, see: http://home.thep.lu.se/~torbjorn/pythia81php/ParticleProperties.php?filepath=files/
-  int col = 101;
-  int acol = 102;
+  int status = 1; // 23=outgoing parton, see: http://home.thep.lu.se/~torbjorn/pythia81php/ParticleProperties.php?filepath=files/
+  int col = 0;
+  int acol = 0;
   
   // int Event::append(int id, int status, int col, int acol, double px, double py, double pz, double e, double m = 0., double scale = 0., double pol = 9.)   
   event.append( id, status, col, acol, px, py, pz, E, m );
@@ -37,9 +42,9 @@ void fillParticle(int id, double pT, double eta, double phi,
 //==========================================================================
 
 int main() {
-  
-  int id = 6; // top quark
-  //int id = 25; // higgs
+
+  //int id = 6; // top quark
+  int id = 25; // higgs
   double pT = 350.;
   double eta = 0.5; 
   double phi =  0.0;
@@ -59,7 +64,8 @@ int main() {
 
   // Key requirement: switch off ProcessLevel, and thereby also PartonLevel.
   pythia.readString("ProcessLevel:all = off");
-  pythia.readString("PartonLevel:all = off");
+  //pythia.readString("PartonLevel:all = on");
+  //pythia.readString("HadronLevel:all = on");
   pythia.readString("ProcessLevel:resonanceDecays = on");
   
   
@@ -71,6 +77,7 @@ int main() {
   pythia.readString("Next:numberShowProcess = 0");
   pythia.readString("Next:numberShowEvent = 0");
 
+  
   // top/Z/H hadronic decays only
   pythia.readString("6:onMode = off");
   pythia.readString("6:onIfMatch = 5 24 ");
@@ -83,6 +90,7 @@ int main() {
   
   pythia.readString("25:onMode = off");
   pythia.readString("25:onIfAny = 5 -5");
+  
   
   // Initialize.
   pythia.init();
@@ -97,7 +105,7 @@ int main() {
                                       recombScheme, strategy);
 
   // Fastjet input
-  std::vector <fastjet::PseudoJet> fjInputs;
+  //std::vector <fastjet::PseudoJet> fjInputs;
 
   // Book histograms
 
@@ -116,6 +124,7 @@ int main() {
     }
 
     // reset fastjet
+    std::vector <fastjet::PseudoJet> fjInputs;
     fjInputs.resize(0);
     
     for (int i = 0; i < pythia.event.size(); ++i) {
@@ -146,20 +155,29 @@ int main() {
 
     int jets_n = all_jets.size();
 
+    if( jets_n == 0 ) continue;
+    
     if( iEvent % 100 == 0 )
       cout << "INFO: event: " << iEvent << " :: no. of jets: " << jets_n << endl;
 
-    fastjet::PseudoJet * jet = &(all_jets.at(0));
+    fastjet::PseudoJet * ljet = &(all_jets.at(0));
 
     if( iEvent % 100 == 0 ) {
       cout << "INFO: (pT,eta,phi,E;m) = (" <<
-	jet->perp() << "," <<
-	jet->eta() << "," <<
-	jet->phi() << "," <<
-	jet->E() << "," <<
-	jet->m() << ")" << endl;
+	ljet->perp() << "," <<
+	ljet->eta() << "," <<
+	ljet->phi() << "," <<
+	ljet->E() << "," <<
+	ljet->m() << ")" << endl;
 	
     }
+
+    double beta=1.0;
+    NsubjettinessRatio nSub21( 2, 1,OnePass_WTA_KT_Axes(), UnnormalizedMeasure(beta) );
+    NsubjettinessRatio nSub32( 3, 2,OnePass_WTA_KT_Axes(), UnnormalizedMeasure(beta) );
+
+    double tau21 = nSub21.result(*ljet);
+    double tau32 = nSub32.result(*ljet);
   }
   
   pythia.stat();
