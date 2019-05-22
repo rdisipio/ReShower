@@ -2,6 +2,9 @@
 // Based on Pythia8 main21.cc example
 // https://github.com/mortenpi/pythia8/blob/master/examples/main21.cc
 
+#include <stdio.h>      /* printf, fgets */
+#include <stdlib.h>     /* atoi */
+
 #include "Pythia8/Pythia.h"
 //#include "Pythia8Plugins/FastJet3.h"
 
@@ -17,7 +20,7 @@ using namespace fastjet::contrib;
 
 //==========================================================================
 
-void fillParticle(int id, double pT, double eta, double phi, 
+void AddBoson(int id, double pT, double eta, double phi, 
   Event& event, ParticleData& pdt) {
 
   event.reset();
@@ -32,33 +35,55 @@ void fillParticle(int id, double pT, double eta, double phi,
   double P = sqrtpos( px*px + py*py + pz*pz );
   double E = sqrtpos( P*P + m*m );
 
-  int status = 1; // 23=outgoing parton, see: http://home.thep.lu.se/~torbjorn/pythia81php/ParticleProperties.php?filepath=files/
-  int col = 0;
-  int acol = 0;
-  
-  // int Event::append(int id, int status, int col, int acol, double px, double py, double pz, double e, double m = 0., double scale = 0., double pol = 9.)   
-  event.append( id, status, col, acol, px, py, pz, E, m );
-  
+  int status = 1;
+   
+  event.append( id, status, 0, 0, px, py, pz, E, m );
 }
 
+void AddQuark(int id, double pT, double eta, double phi, 
+  Event& event, ParticleData& pdt) {
+
+  event.reset();
+
+  // E^2 - P^2 = m^2
+  
+  double m_t = pdt.m0(id);
+  
+  double px = pT * cos(phi);
+  double py = pT * sin(phi);
+  double pz = pT * sinh(eta);
+  double P = sqrtpos( px*px + py*py + pz*pz );
+  double E = sqrtpos( P*P + m_t*m_t );
+
+  int status = 1; 
+    
+  event.append( id, status, 101, 0, px, py, pz, E, m_t );
+
+  double m_q = pdt.m0(1);
+  double E_q = sqrtpos( P*P + m_q*m_q );
+  event.append( -1, status, 0, 101, -px, -py, -pz, E_q, m_q );
+}
+
+/// return a vector of jets sorted into decreasing energy
+vector<fastjet::PseudoJet> sorted_by_mass(const vector<fastjet::PseudoJet> & jets) {
+  vector<double> masses(jets.size());
+  for (size_t i = 0; i < jets.size(); i++) {masses[i] = -jets[i].m();}
+  return objects_sorted_by_values(jets, masses);
+}
 
 //==========================================================================
 
-int main() {
+int main(int argc, char *argv[]) {
 
-  //int id = 6; // top quark
-  int id = 25; // higgs
-  double pT = 350.;
-  double eta = 0.5; 
-  double phi =  0.0;
+  int id = (argc > 1) ? atoi(argv[1]) : 6; // 6=top quark, 23=Z, 25=higgs
+  
+  double pT = (argc > 2) ? atof(argv[2]) : 350.;
+  
+  const double eta = 1.0; 
+  const double phi =  0.0;
 
-  int nEvent = 10000;
-  int nList = 3;
-
-  double pT_min = 0.;
-  if((id==6)||(id==-6)) pT_min = 350.;
-  if(id==23) pT_min = 200.;
-  if(id==25) pT_min = 250.;
+  const int nEvent = 10000;
+  const int nList = 3;
 
   // Generator; shorthand for event and particleData.
   Pythia pythia;  
@@ -100,32 +125,44 @@ int main() {
 
   // Setup fastjet
   // Fastjet analysis - select algorithm and parameters
-  double Rparam = 1.0;
+  double R_large = 1.0;
+  double R_small = 0.4;
   fastjet::Strategy               strategy = fastjet::Best;
   fastjet::RecombinationScheme    recombScheme = fastjet::E_scheme;
-  fastjet::JetDefinition         *jetDef = NULL;
-  jetDef = new fastjet::JetDefinition(fastjet::antikt_algorithm, Rparam,
+  
+  fastjet::JetDefinition * jetDef_large = new fastjet::JetDefinition(fastjet::antikt_algorithm, R_large,
+                                      recombScheme, strategy);
+  
+  fastjet::JetDefinition * jetDef_small = new fastjet::JetDefinition(fastjet::antikt_algorithm, R_small,
                                       recombScheme, strategy);
 
   // Fastjet input
-  //std::vector <fastjet::PseudoJet> fjInputs;
+  std::vector <fastjet::PseudoJet> fjInputs_large;
+  std::vector <fastjet::PseudoJet> fjInputs_small;
 
   // Book histograms
-  TFile * ofile = TFile::Open( "histograms.root", "RECREATE" );
-  
-  TH1F * h_ljet_pt = new TH1F( "ljet_pt", ";Large-R jet p_{T} [GeV]", 20, 0., 1000. );
-  TH1F * h_ljet_m = new TH1F( "ljet_m", ";Large-R jet m [GeV]", 30, 0., 300. );
-  TH1F * h_ljet_eta = new TH1F( "ljet_eta", ";Large-R jet #eta", 25, -2.5, 2.5 );
-  TH1F * h_ljet_tau21 = new TH1F( "ljet_tau21", ";Large-R jet #tau_{21}", 20, 0., 1.0 );
-  TH1F * h_ljet_tau32 = new TH1F( "ljet_tau32", ";Large-R jet #tau_{32}", 20, 0., 1.0 );
+  char buf[256];
+  sprintf( buf, "histograms/histograms.pid_%i.pt_%.0f.root", id, pT );
+  TFile * ofile = TFile::Open( buf, "RECREATE" );
+
+  TH1F * h_jets_n = new TH1F("jets_n", ";Small-R jets multiplicity", 10, -0.5, 9.5 );
+  TH1F * h_ljets_n = new TH1F("ljets_n", ";Large-R jets multiplicity", 5, -0.5, 4.5 );
+  TH1F * h_ljet_pt = new TH1F( "ljet_pt", ";Large-R jet p_{T} [GeV]", 50, 0., 1000. );
+  TH1F * h_ljet_m = new TH1F( "ljet_m", ";Large-R jet m [GeV]", 60, 0., 300. );
+  TH1F * h_ljet_eta = new TH1F( "ljet_eta", ";Large-R jet #eta", 50, -2.5, 2.5 );
+  TH1F * h_ljet_tau21 = new TH1F( "ljet_tau21", ";Large-R jet #tau_{21}", 50, 0., 1.0 );
+  TH1F * h_ljet_tau32 = new TH1F( "ljet_tau32", ";Large-R jet #tau_{32}", 50, 0., 1.0 );
   TH1F * h_ljet_nconst = new TH1F( "ljet_nconst", ";Large-R jet constituents", 100, 0.5, 100.5 );
 
   // Begin of event loop.
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
-    fillParticle( id, pT, eta, phi, event, pdt );
+    if( ( id == 6 ) or ( id == -6 ) )
+      AddQuark( id, pT, eta, phi, event, pdt );
+    else
+      AddBoson( id, pT, eta, phi, event, pdt );
+    
 
-    //if(!pythia.next()) continue;
-    pythia.next();
+    if(!pythia.next()) continue;
     
     // List first few events.
     if (iEvent < nList) { 
@@ -135,8 +172,9 @@ int main() {
     }
 
     // reset fastjet
-    std::vector <fastjet::PseudoJet> fjInputs;
-    fjInputs.resize(0);
+    
+    fjInputs_large.resize(0);
+    fjInputs_small.resize(0);
     
     for (int i = 0; i < pythia.event.size(); ++i) {
       if (!pythia.event[i].isFinal())        continue;
@@ -148,40 +186,68 @@ int main() {
       // Only |eta| < 2.5
       if (fabs(pythia.event[i].eta()) > 2.5) continue;
 
-      fjInputs.push_back( fastjet::PseudoJet( pythia.event[i].px(),
-        pythia.event[i].py(), pythia.event[i].pz(), pythia.event[i].e() ) );
+      fastjet::PseudoJet pjet( pythia.event[i].px(),
+			       pythia.event[i].py(),
+			       pythia.event[i].pz(),
+			       pythia.event[i].e() );
+      fjInputs_large.push_back( pjet );
+      fjInputs_small.push_back( pjet );
+
     } // end loop over particles
 
-    if (fjInputs.size() == 0) {
+    if (fjInputs_large.size() == 0) {
       cout << "Error: event with no final state particles" << endl;
       continue;
     }
 
     // Run Fastjet algorithm
-    vector <fastjet::PseudoJet> all_jets;
-    fastjet::ClusterSequence clustSeq(fjInputs, *jetDef);
+    vector <fastjet::PseudoJet> ljets;
+    fastjet::ClusterSequence ljets_cs(fjInputs_large, *jetDef_large);
+
+    vector <fastjet::PseudoJet> jets;
+    fastjet::ClusterSequence jets_cs(fjInputs_small, *jetDef_small);
 
     // Extract inclusive jets sorted by pT
-    all_jets = sorted_by_pt( clustSeq.inclusive_jets(pT_min) );
+    ljets = sorted_by_mass( ljets_cs.inclusive_jets(250.) );
+    jets = sorted_by_mass( jets_cs.inclusive_jets(20.) );
 
-    int jets_n = all_jets.size();
+    int ljets_n = ljets.size();
+    int jets_n  = jets.size();
 
-    if( jets_n == 0 ) continue;
+    if( ljets_n == 0 ) continue;
+
+    fastjet::PseudoJet * ljet = NULL;
     
-    if( iEvent % 100 == 0 )
+    if( iEvent % 1000 == 0 ) {
       cout << "INFO: event: " << iEvent << " :: no. of jets: " << jets_n << endl;
-
-    fastjet::PseudoJet * ljet = &(all_jets.at(0));
-
-    if( iEvent % 100 == 0 ) {
-      cout << "INFO: (pT,eta,phi,E;m) = (" <<
-	ljet->perp() << "," <<
-	ljet->eta() << "," <<
-	ljet->phi() << "," <<
-	ljet->E() << "," <<
-	ljet->m() << ")" << endl;
-	
+      cout << "INFO: event: " << iEvent << " :: no. of ljets: " << ljets_n << endl;
+      for( int j = 0 ; j < ljets_n ; ++j ) {
+	ljet = &(ljets.at(j));
+	cout << "INFO: (pT,eta,phi,E;m) = (" <<
+		 ljet->perp() << "," <<
+		 ljet->eta() << "," <<
+		 ljet->phi() << "," <<
+		 ljet->E() << "," <<
+		 ljet->m() << ")" << endl;
+      }
     }
+
+    /*
+    ljet = NULL;
+    for( int j = 0 ; j < ljets_n ; ++j ) {
+      const double j_eta = ljets.at(j).eta();
+      const double j_phi = ljets.at(j).phi();
+      const double dEta = j_eta - eta;
+      const double dPhi = j_phi - phi;
+      const double dR = sqrtpos( dEta*dEta + dPhi*dPhi );
+	
+      if( dR > 1.0 ) continue;
+      
+      ljet = &(ljets.at(j));
+    }
+    if( ljet == NULL ) continue;
+    */
+    ljet = &(ljets.at(0));
 
     double beta=1.0;
     NsubjettinessRatio nSub21( 2, 1,OnePass_WTA_KT_Axes(), UnnormalizedMeasure(beta) );
@@ -191,6 +257,8 @@ int main() {
     double tau32 = nSub32.result(*ljet);
 
     // Fill histograms
+    h_jets_n->Fill( jets_n );
+    h_ljets_n->Fill( ljets_n );
     h_ljet_pt->Fill( ljet->perp() );
     h_ljet_eta->Fill( ljet->eta() );
     h_ljet_m->Fill( ljet->m() );
@@ -203,8 +271,9 @@ int main() {
 
   ofile->Write();
   ofile->Close();
-  
-  delete jetDef;
+
+  delete jetDef_large;
+  delete jetDef_small;
 
   /*
   delete h_ljet_pt;
