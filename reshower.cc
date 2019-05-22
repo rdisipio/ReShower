@@ -118,6 +118,7 @@ int main() {
   TH1F * h_ljet_eta = new TH1F( "ljet_eta", ";Large-R jet #eta", 25, -2.5, 2.5 );
   TH1F * h_ljet_tau21 = new TH1F( "ljet_tau21", ";Large-R jet #tau_{21}", 20, 0., 1.0 );
   TH1F * h_ljet_tau32 = new TH1F( "ljet_tau32", ";Large-R jet #tau_{32}", 20, 0., 1.0 );
+  TH1F * h_ljet_nconst = new TH1F( "ljet_nconst", ";Large-R jet constituents", 100, 0.5, 100.5 );
 
   // Begin of event loop.
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
@@ -195,6 +196,7 @@ int main() {
     h_ljet_m->Fill( ljet->m() );
     h_ljet_tau21->Fill( tau21 );
     h_ljet_tau32->Fill( tau32 );
+    h_ljet_nconst->Fill( ljet->constituents().size() );
   }
   
   pythia.stat();
