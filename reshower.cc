@@ -9,6 +9,9 @@
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/contrib/Nsubjettiness.hh"
 
+#include "TFile.h"
+#include "TH1F.h"
+
 using namespace Pythia8; 
 using namespace fastjet::contrib;
 
@@ -108,6 +111,13 @@ int main() {
   //std::vector <fastjet::PseudoJet> fjInputs;
 
   // Book histograms
+  TFile * ofile = TFile::Open( "histograms.root", "RECREATE" );
+  
+  TH1F * h_ljet_pt = new TH1F( "ljet_pt", ";Large-R jet p_{T} [GeV]", 20, 0., 1000. );
+  TH1F * h_ljet_m = new TH1F( "ljet_m", ";Large-R jet m [GeV]", 30, 0., 300. );
+  TH1F * h_ljet_eta = new TH1F( "ljet_eta", ";Large-R jet #eta", 25, -2.5, 2.5 );
+  TH1F * h_ljet_tau21 = new TH1F( "ljet_tau21", ";Large-R jet #tau_{21}", 20, 0., 1.0 );
+  TH1F * h_ljet_tau32 = new TH1F( "ljet_tau32", ";Large-R jet #tau_{32}", 20, 0., 1.0 );
 
   // Begin of event loop.
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
@@ -178,11 +188,29 @@ int main() {
 
     double tau21 = nSub21.result(*ljet);
     double tau32 = nSub32.result(*ljet);
+
+    // Fill histograms
+    h_ljet_pt->Fill( ljet->perp() );
+    h_ljet_eta->Fill( ljet->eta() );
+    h_ljet_m->Fill( ljet->m() );
+    h_ljet_tau21->Fill( tau21 );
+    h_ljet_tau32->Fill( tau32 );
   }
   
   pythia.stat();
 
+  ofile->Write();
+  ofile->Close();
+  
   delete jetDef;
+
+  /*
+  delete h_ljet_pt;
+  delete h_ljet_eta;
+  delete h_ljet_m;
+  delete h_ljet_tau21;
+  delete h_ljet_tau32;
+  */
   
   return 0;
 }
