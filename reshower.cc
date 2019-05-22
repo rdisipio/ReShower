@@ -24,7 +24,7 @@ void fillParticle(int id, double pT, double eta, double phi,
   double P = sqrtpos( px*px + py*py + pz*pz );
   double E = sqrtpos( P*P + m*m );
 
-  int status = 23; // http://home.thep.lu.se/~torbjorn/pythia81php/ParticleProperties.php?filepath=files/
+  int status = 23; // outgoing parton, see: http://home.thep.lu.se/~torbjorn/pythia81php/ParticleProperties.php?filepath=files/
   int col = 101;
   int acol = 102;
   
@@ -38,8 +38,8 @@ void fillParticle(int id, double pT, double eta, double phi,
 
 int main() {
   
-  //int id = 6; // top quark
-  int id = 25; // higgs
+  int id = 6; // top quark
+  //int id = 25; // higgs
   double pT = 350.;
   double eta = 0.5; 
   double phi =  0.0;
@@ -59,10 +59,10 @@ int main() {
 
   // Key requirement: switch off ProcessLevel, and thereby also PartonLevel.
   pythia.readString("ProcessLevel:all = off");
-
-  // Also allow resonance decays, with showers in them
-  //pythia.readString("Standalone:allowResDec = on");
-
+  pythia.readString("PartonLevel:all = off");
+  pythia.readString("ProcessLevel:resonanceDecays = on");
+  
+  
   // Optionally switch off decays.
   //pythia.readString("HadronLevel:Decay = off");
 
@@ -73,7 +73,7 @@ int main() {
 
   // top/Z/H hadronic decays only
   pythia.readString("6:onMode = off");
-  pythia.readString("6:onIfMatch = 5 -24 ");
+  pythia.readString("6:onIfMatch = 5 24 ");
   
   pythia.readString("24:onMode = off");
   pythia.readString("24:onIfAny = 1 2 3 4 -1 -2 -3 -4");
@@ -93,7 +93,7 @@ int main() {
   fastjet::Strategy               strategy = fastjet::Best;
   fastjet::RecombinationScheme    recombScheme = fastjet::E_scheme;
   fastjet::JetDefinition         *jetDef = NULL;
-  jetDef = new fastjet::JetDefinition(fastjet::kt_algorithm, Rparam,
+  jetDef = new fastjet::JetDefinition(fastjet::antikt_algorithm, Rparam,
                                       recombScheme, strategy);
 
   // Fastjet input
@@ -105,12 +105,9 @@ int main() {
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
     fillParticle( id, pT, eta, phi, event, pdt );
 
-    // Generate events. Quit if failure.
-    if (!pythia.next()) {
-      cout << " Event generation aborted prematurely, owing to error!\n"; 
-      break;
-    }
-
+    //if(!pythia.next()) continue;
+    pythia.next();
+    
     // List first few events.
     if (iEvent < nList) { 
      event.list();
@@ -146,7 +143,23 @@ int main() {
 
     // Extract inclusive jets sorted by pT
     all_jets = sorted_by_pt( clustSeq.inclusive_jets(pT_min) );
-   
+
+    int jets_n = all_jets.size();
+
+    if( iEvent % 100 == 0 )
+      cout << "INFO: event: " << iEvent << " :: no. of jets: " << jets_n << endl;
+
+    fastjet::PseudoJet * jet = &(all_jets.at(0));
+
+    if( iEvent % 100 == 0 ) {
+      cout << "INFO: (pT,eta,phi,E;m) = (" <<
+	jet->perp() << "," <<
+	jet->eta() << "," <<
+	jet->phi() << "," <<
+	jet->E() << "," <<
+	jet->m() << ")" << endl;
+	
+    }
   }
   
   pythia.stat();
