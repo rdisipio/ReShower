@@ -1,6 +1,7 @@
 #!/bin/bash
 
-nevents=1000000
+nevents=10000
+[ ! -z $1 ] && nevents=$1
 
 ./reshower 6 350 ${nevents} & # top quark, pT = 350 GeV
 ./reshower 6 500 ${nevents} & # top quark, pT = 500 GeV

@@ -145,11 +145,11 @@ int main(int argc, char *argv[]) {
   sprintf( buf, "histograms/histograms.pid_%i.pt_%.0f.root", id, pT );
   TFile * ofile = TFile::Open( buf, "RECREATE" );
 
-  TH1F * h_jets_n = new TH1F("jets_n", ";Small-R jets multiplicity", 10, -0.5, 9.5 );
+  TH1F * h_jets_n = new TH1F("jets_n", ";Small-R jets multiplicity", 6, -0.5, 5.5 );
   TH1F * h_ljets_n = new TH1F("ljets_n", ";Large-R jets multiplicity", 5, -0.5, 4.5 );
   TH1F * h_ljet_pt = new TH1F( "ljet_pt", ";Large-R jet p_{T} [GeV]", 50, 0., 1000. );
-  TH1F * h_ljet_m = new TH1F( "ljet_m", ";Large-R jet m [GeV]", 60, 0., 300. );
-  TH1F * h_ljet_eta = new TH1F( "ljet_eta", ";Large-R jet #eta", 50, -2.5, 2.5 );
+  TH1F * h_ljet_m = new TH1F( "ljet_m", ";Large-R jet m [GeV]", 50, 0., 250. );
+  TH1F * h_ljet_eta = new TH1F( "ljet_eta", ";Large-R jet #eta", 50, 0, 2.0 );
   TH1F * h_ljet_tau21 = new TH1F( "ljet_tau21", ";Large-R jet #tau_{21}", 50, 0., 1.0 );
   TH1F * h_ljet_tau32 = new TH1F( "ljet_tau32", ";Large-R jet #tau_{32}", 50, 0., 1.0 );
   TH1F * h_ljet_nconst = new TH1F( "ljet_nconst", ";Large-R jet constituents", 100, 0.5, 100.5 );
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 
     fastjet::PseudoJet * ljet = NULL;
     
-    if( iEvent % 1000 == 0 ) {
+    if( iEvent % 10000 == 0 ) {
       cout << "INFO: event: " << iEvent << " :: no. of jets: " << jets_n << endl;
       cout << "INFO: event: " << iEvent << " :: no. of ljets: " << ljets_n << endl;
       for( int j = 0 ; j < ljets_n ; ++j ) {

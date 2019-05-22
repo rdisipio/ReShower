@@ -3,6 +3,7 @@ Run Parton Shower on the same event multiple times
 
 ```
 mkdir -p histograms
+mkdir -p plots
 ```
 
 Top quarks, t->Wb->qqb
