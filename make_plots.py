@@ -49,7 +49,7 @@ known_obs = [
 ]
 
 f_higgs_low = TFile.Open("histograms/histograms.pid_25.pt_250.root")
-f_higgs_mid = TFile.Open("histograms/histograms.pid_25.pt_500.root")
+f_higgs_mid = TFile.Open("histograms/histograms.pid_25.pt_400.root")
 f_higgs_hi = TFile.Open("histograms/histograms.pid_25.pt_800.root")
 
 f_top_low = TFile.Open("histograms/histograms.pid_6.pt_350.root")
@@ -82,9 +82,11 @@ for obs in known_obs:
     SetHistogramStyle(h_top[obs]['hi'], color=kRed,
                       linestyle=kDashed, markersize=0)
 
-c = TCanvas("C", "C", 1200, 800)
-c.Divide(3, 2)
-# c.Draw()
+#c = TCanvas("C", "C", 1200, 800)
+#c.Divide(3, 2)
+
+c = TCanvas("C", "C", 800, 1200)
+c.Divide(2,3)
 
 i = 1
 for obs in known_obs:
