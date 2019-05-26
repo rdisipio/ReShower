@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
   TH1F * h_ljet_tau21 = new TH1F( "ljet_tau21", ";Large-R jet #tau_{21}", 50, 0., 1.0 );
   TH1F * h_ljet_tau32 = new TH1F( "ljet_tau32", ";Large-R jet #tau_{32}", 50, 0., 1.0 );
   TH1F * h_ljet_nconst = new TH1F( "ljet_nconst", ";Large-R jet constituents", 100, 0.5, 100.5 );
-  TH1F * h_ljet_topTag = new TH1F( "ljet_topTag", ";Large-R jet top tagging", 2, 0.5, 1.5 );
-  TH1F * h_ljet_higgsTag = new TH1F( "ljet_higgsTag", ";Large-R jet Higgs tagging", 2, 0.5, 1.5 );
+  TH1F * h_ljet_topTag = new TH1F( "ljet_topTag", ";Large-R jet top tagging", 2, -0.5, 1.5 );
+  TH1F * h_ljet_higgsTag = new TH1F( "ljet_higgsTag", ";Large-R jet Higgs tagging", 2, -0.5, 1.5 );
 
   // Begin of event loop.
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
