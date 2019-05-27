@@ -1,3 +1,9 @@
+# Installation
+Download:
+* Pythia: http://home.thep.lu.se/~torbjorn/Pythia.html
+* FastJet: http://fastjet.fr/
+* fjcontrib: https://fastjet.hepforge.org/contrib/
+
 # ReShower
 Run Parton Shower on the same event multiple times
 
