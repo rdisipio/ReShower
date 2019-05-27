@@ -17,4 +17,6 @@ nevents=100000
 ./reshower 6 900 ${nevents} &
 ./reshower 6 950 ${nevents} &
 ./reshower 6 1000 ${nevents} &
+./reshower 6 1100 ${nevents} &
+./reshower 6 1200 ${nevents} &
 

@@ -3,7 +3,6 @@
 nevents=100000
 [ ! -z $1 ] &&nevents=$1
 
-./reshower 25 200 ${nevents} &
 ./reshower 25 250 ${nevents} &
 ./reshower 25 300 ${nevents} &
 ./reshower 25 350 ${nevents} &
@@ -20,4 +19,5 @@ nevents=100000
 ./reshower 25 900 ${nevents} &
 ./reshower 25 950 ${nevents} &
 ./reshower 25 1000 ${nevents} &
-
+./reshower 25 1100 ${nevents} &
+./reshower 25 1200 ${nevents} &
