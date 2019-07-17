@@ -14,6 +14,7 @@
 
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH2F.h"
 
 using namespace Pythia8; 
 using namespace fastjet::contrib;
@@ -161,6 +162,8 @@ int main(int argc, char *argv[]) {
   TH1F * h_ljet_nconst = new TH1F( "ljet_nconst", ";Large-R jet constituents", 100, 0.5, 100.5 );
   TH1F * h_ljet_topTag = new TH1F( "ljet_topTag", ";Large-R jet top tagging", 2, -0.5, 1.5 );
   TH1F * h_ljet_higgsTag = new TH1F( "ljet_higgsTag", ";Large-R jet Higgs tagging", 2, -0.5, 1.5 );
+  TH2F * h_ljet_m_vs_tau21 = new TH2F( "ljet_m_vs_tau21", ";Large-R jet #tau_{21};Large-R jet m [GeV]", 50, 0., 1., 50, 0., 250. );
+  TH2F * h_ljet_m_vs_tau32 = new TH2F( "ljet_m_vs_tau32", ";Large-R jet #tau_{32};Large-R jet m [GeV]", 50, 0., 1., 50, 0., 250. );
 
   // Begin of event loop.
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
@@ -240,21 +243,6 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    /*
-    ljet = NULL;
-    for( int j = 0 ; j < ljets_n ; ++j ) {
-      const double j_eta = ljets.at(j).eta();
-      const double j_phi = ljets.at(j).phi();
-      const double dEta = j_eta - eta;
-      const double dPhi = j_phi - phi;
-      const double dR = sqrtpos( dEta*dEta + dPhi*dPhi );
-	
-      if( dR > 1.0 ) continue;
-      
-      ljet = &(ljets.at(j));
-    }
-    if( ljet == NULL ) continue;
-    */
     ljet = &(ljets.at(0));
 
     double beta=1.0;
@@ -281,6 +269,8 @@ int main(int argc, char *argv[]) {
     h_ljet_nconst->Fill( ljet->constituents().size() );
     h_ljet_topTag->Fill( topTag );
     h_ljet_higgsTag->Fill( higgsTag );
+    h_ljet_m_vs_tau21->Fill( tau21, ljet->m() );
+    h_ljet_m_vs_tau32->Fill( tau32, ljet->m() );
   }
 
   Normalize( h_ljet_topTag );
@@ -293,14 +283,6 @@ int main(int argc, char *argv[]) {
 
   delete jetDef_large;
   delete jetDef_small;
-
-  /*
-  delete h_ljet_pt;
-  delete h_ljet_eta;
-  delete h_ljet_m;
-  delete h_ljet_tau21;
-  delete h_ljet_tau32;
-  */
   
   return 0;
 }

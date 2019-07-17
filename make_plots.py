@@ -82,24 +82,42 @@ for obs in known_obs:
     SetHistogramStyle(h_top[obs]['hi'], color=kRed,
                       linestyle=kDashed, markersize=0)
 
-#c = TCanvas("C", "C", 1200, 800)
-#c.Divide(3, 2)
+# c = TCanvas("C", "C", 1200, 800)
+# c.Divide(3, 2)
 
-c = TCanvas("C", "C", 800, 1200)
-c.Divide(2,3)
+c = TCanvas("C", "C", 1000, 1200)
+c.Divide(2, 3)
 
 i = 1
+legends = {}
 for obs in known_obs:
     c.cd(i)
 
     for x in ['low', 'mid', 'hi']:
         Normalize(h_higgs[obs][x])
+        h_higgs[obs][x].GetYaxis().SetTitle("Fraction of events")
 
     h_higgs[obs]['low'].Draw("h")
     h_higgs[obs]['mid'].Draw("h same")
     h_higgs[obs]['hi'].Draw("h same")
 
-    h_higgs[obs]['low'].SetMaximum(1.5*h_higgs[obs]['hi'].GetMaximum())
+    hmax = 1.3 * max([h_higgs[obs]['hi'].GetMaximum(),
+                      h_higgs[obs]['mid'].GetMaximum(),
+                      h_higgs[obs]['low'].GetMaximum()])
+    h_higgs[obs]['low'].SetMaximum(hmax)
+
+    legends[obs] = TLegend(0.20, 0.85, 0.80, 0.85)
+    leg = legends[obs]
+    leg.SetFillColor(0)
+    leg.SetFillStyle(0)
+    leg.SetBorderSize(0)
+    leg.SetTextFont(42)
+    leg.SetTextSize(0.05)
+    leg.SetNColumns(3)
+    leg.AddEntry(h_higgs[obs]['low'], "Low p_{T}", "l")
+    leg.AddEntry(h_higgs[obs]['mid'], "Mid p_{T}", "l")
+    leg.AddEntry(h_higgs[obs]['hi'], "High p_{T}", "l")
+    leg.Draw()
 
     i += 1
 c.SaveAs("plots/higgs.png")
@@ -110,12 +128,29 @@ for obs in known_obs:
 
     for x in ['low', 'mid', 'hi']:
         Normalize(h_top[obs][x])
+        h_top[obs][x].GetYaxis().SetTitle("Fraction of events")
 
     h_top[obs]['low'].Draw("h")
     h_top[obs]['mid'].Draw("h same")
     h_top[obs]['hi'].Draw("h same")
 
-    h_top[obs]['low'].SetMaximum(1.5*h_top[obs]['hi'].GetMaximum())
+    hmax = 1.3 * max([h_top[obs]['hi'].GetMaximum(),
+                      h_top[obs]['mid'].GetMaximum(),
+                      h_top[obs]['low'].GetMaximum()])
+    h_top[obs]['low'].SetMaximum(hmax)
+
+    legends[obs] = TLegend(0.20, 0.85, 0.80, 0.85)
+    leg = legends[obs]
+    leg.SetFillColor(0)
+    leg.SetFillStyle(0)
+    leg.SetBorderSize(0)
+    leg.SetTextFont(42)
+    leg.SetTextSize(0.05)
+    leg.SetNColumns(3)
+    leg.AddEntry(h_top[obs]['low'], "Low p_{T}", "l")
+    leg.AddEntry(h_top[obs]['mid'], "Mid p_{T}", "l")
+    leg.AddEntry(h_top[obs]['hi'], "High p_{T}", "l")
+    leg.Draw()
 
     i += 1
 c.SaveAs("plots/top.png")
